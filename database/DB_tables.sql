@@ -55,5 +55,5 @@ CREATE TABLE IF NOT EXISTS drops (
     drop_id INT,
     
     FOREIGN KEY (avator_id)	REFERENCES avators(id) 	ON DELETE CASCADE,
-    FOREIGN KEY (m_drop_id) REFERENCES m_drops(id) 	ON DELETE CASCADE
+    FOREIGN KEY (drop_id) REFERENCES drops(id) 	ON DELETE CASCADE
 );

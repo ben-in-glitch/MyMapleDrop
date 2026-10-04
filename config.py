@@ -1,10 +1,12 @@
 import os
 from dotenv import load_dotenv
-import mysql.connector
+from mysql.connector import pooling
 
 load_dotenv()
 
-db = mysql.connector.connect(
+db_pool = pooling.MySQLConnectionPool(
+    pool_name="mypool",
+    pool_size=5,
     host=os.environ.get("host"),
     user=os.environ.get("user"),
     password=os.environ.get("password"),
