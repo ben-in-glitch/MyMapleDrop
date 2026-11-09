@@ -130,6 +130,36 @@ class ItemRepository:
 
         return res
 
+    def get_item_by_name(self, item_name):
+        with db_connection(self.db_pool) as conn:
+            cursor = conn.cursor()
+            sql = "SELECT * FROM items WHERE item = %s"
+            cursor.execute(sql, (item_name,))
+            result = cursor.fetchone()
+            cursor.close()
+
+        return model.Items(id=result[0], item=result[1]) if result else None
+
+    def get_item_by_id(self, item_id):
+        with db_connection(self.db_pool) as conn:
+            cursor = conn.cursor()
+            sql = "SELECT * FROM items WHERE id = %s"
+            cursor.execute(sql, (item_id,))
+            result = cursor.fetchone()
+            cursor.close()
+
+        return model.Items(id=result[0], item=result[1]) if result else None
+
+    def get_all_items(self):
+        with db_connection(self.db_pool) as conn:
+            cursor = conn.cursor()
+            sql = "SELECT * FROM items"
+            cursor.execute(sql)
+            results = cursor.fetchall()
+            cursor.close()
+
+        return [model.Items(id=result[0], item=result[1]) for result in results]
+
 class BossRepository:
     def __init__(self, db_pool):
         self.db_pool = db_pool
@@ -155,6 +185,36 @@ class BossRepository:
             cursor.close()
 
         return res
+
+    def get_boss_by_name(self, boss_name):
+        with db_connection(self.db_pool) as conn:
+            cursor = conn.cursor()
+            sql = "SELECT * FROM bosses WHERE boss = %s"
+            cursor.execute(sql, (boss_name,))
+            result = cursor.fetchone()
+            cursor.close()
+
+        return model.Bosses(id=result[0], boss=result[1], difficulty=result[2]) if result else None
+
+    def get_boss_by_id(self, boss_id):
+        with db_connection(self.db_pool) as conn:
+            cursor = conn.cursor()
+            sql = "SELECT * FROM bosses WHERE id = %s"
+            cursor.execute(sql, (boss_id,))
+            result = cursor.fetchone()
+            cursor.close()
+
+        return model.Bosses(id=result[0], boss=result[1], difficulty=result[2]) if result else None
+
+    def get_all_bosses(self):
+        with db_connection(self.db_pool) as conn:
+            cursor = conn.cursor()
+            sql = "SELECT * FROM bosses"
+            cursor.execute(sql)
+            results = cursor.fetchall()
+            cursor.close()
+
+        return [model.Bosses(id=result[0], boss=result[1], difficulty=result[2]) for result in results]
 
 class DropRepository:
     def __init__(self, db_pool):

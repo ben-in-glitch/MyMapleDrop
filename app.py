@@ -4,6 +4,7 @@ from config import token, guild_id, db_pool
 import services
 from repositories import UserRepository, AvatorRepository, ItemRepository, BossRepository, DropRepository, Drop_participantRepository
 
+
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
@@ -65,6 +66,80 @@ async def update_avator(interaction: discord.Interaction, new_avator:str = None,
         message = f"Failed to update avator."
     await interaction.response.send_message(message)
 
+#-----------------------------------------------------bosses-----------------------------------------------------
+@tree.command(name="create_boss", description ="Create a new boss")
+@app_commands.choices(
+    difficulty=[
+        app_commands.Choice(name="Easy", value="easy"),
+        app_commands.Choice(name="Normal", value="normal"),
+        app_commands.Choice(name="Hard", value="hard"),
+        app_commands.Choice(name="Extreme", value="extreme")
+    ]
+    )
+async def create_boss(interaction: discord.Interaction, boss_name: str, difficulty: app_commands.Choice[str]):
+    try:
+        boss = services.BossService(boss_repo).create(boss_name.strip(), difficulty.value)
+        message = f"Boss ({boss.boss}) created successfully!"
+    except (services.BossAlreadyExistsError, services.BossNotFoundError):
+        message = "Failed to create boss."
+    await interaction.response.send_message(message)
+
+async def boss_autocomplete(interaction: discord.Interaction, current: str):
+    bosses = boss_repo.get_all_bosses()
+    return [
+        app_commands.Choice(name=f"{boss.boss} ({boss.difficulty})", value=str(boss.id))
+        for boss in bosses if current.lower() in boss.boss.lower()
+    ]
+
+@tree.command(name="update_boss", description ="Update a boss")
+@app_commands.autocomplete(boss=boss_autocomplete)
+@app_commands.choices(
+    new_difficulty=[
+        app_commands.Choice(name="Easy", value="easy"),
+        app_commands.Choice(name="Normal", value="normal"),
+        app_commands.Choice(name="Hard", value="hard"),
+        app_commands.Choice(name="Extreme", value="extreme")
+    ]
+    )
+async def update_boss(interaction: discord.Interaction, boss: str, new_boss_name: str = None, new_difficulty: app_commands.Choice[str] = None):
+    try:
+        boss = services.BossService(boss_repo).update(int(boss),
+                                                      new_boss_name.strip() if new_boss_name else None,
+                                                      new_difficulty.value if new_difficulty else None)
+        message = f"Boss ({boss.boss}) updated successfully!"
+    except (services.BossAlreadyExistsError, services.BossNotFoundError):
+        message = "Failed to update boss."
+    await interaction.response.send_message(message)
+
+#-----------------------------------------------------items-----------------------------------------------------
+@tree.command(name="create_item", description ="Create a new item")
+async def create_item(interaction: discord.Interaction, item: str):
+    try:
+        item_obj = services.ItemService(item_repo).create(item.strip())
+        message = f"Item ({item_obj.item}) created successfully!"
+    except (services.ItemAlreadyExistsError, services.ItemNotFoundError):
+        message = "Failed to create item."
+    await interaction.response.send_message(message)
+
+async def item_autocomplete(interaction: discord.Interaction, current: str):
+    items = item_repo.get_all_items()
+    return [
+        app_commands.Choice(name=f"{item.item}", value=str(item.id))
+        for item in items if current.lower() in item.item.lower()
+    ]
+
+@tree.command(name="update_item", description ="Update an item")
+@app_commands.autocomplete(item_id=item_autocomplete)
+async def update_item(interaction: discord.Interaction, item_id: int, new_item_name: str):
+    try:
+        item_obj = services.ItemService(item_repo).update(int(item_id), new_item_name.strip())
+        message = f"Item ({item_obj.item}) updated successfully!"
+    except (services.ItemAlreadyExistsError, services.ItemNotFoundError):
+        message = "Failed to update item."
+    await interaction.response.send_message(message)
+
+
+#-----------------------------------------------------on_ready-----------------------------------------------------
 @client.event
 async def on_ready():
     tree.copy_global_to(guild=guild)
