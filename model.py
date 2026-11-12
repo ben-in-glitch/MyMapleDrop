@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
-from datetime import datetime
+from datetime import date
 
 
 @dataclass
@@ -10,10 +10,10 @@ class Users:
     username: str = None
 
 @dataclass
-class Avators:
+class Avatars:
     id: int = None
     user_id: int = None
-    avator: str = None
+    avatar: str = None
     job: str = None
     cur_channel: str = None
 
@@ -36,10 +36,10 @@ class Drops:
     is_container: bool = False
     open_item_id: int = None
     quantity: int = 1
-    created_at: datetime = datetime.now().strftime("%Y-%m-%d")
+    created_at: date = field(default_factory=date.today)
 
 @dataclass
 class Drop_participants:
     id: int = None
-    avator_id: int = None
+    avatar_id: int = None
     drop_id: int = None

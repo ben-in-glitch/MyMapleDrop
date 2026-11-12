@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS MyMapleDrop;
 USE MyMapleDrop;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS users, avators, items, bosses, drops, drop_participants;
+DROP TABLE IF EXISTS users, avatars, items, bosses, drops, drop_participants;
 SET FOREIGN_KEY_CHECKS = 1;
 
 
@@ -12,10 +12,10 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) UNIQUE NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS avators (
+CREATE TABLE IF NOT EXISTS avatars (
 	id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT, 
-    avator VARCHAR(50) UNIQUE NOT NULL,
+    avatar VARCHAR(50) UNIQUE NOT NULL,
     cur_channel VARCHAR(50),
     job VARCHAR(50) NOT NULL,
     
@@ -51,9 +51,9 @@ CREATE TABLE IF NOT EXISTS drops (
 
  CREATE TABLE IF NOT EXISTS drop_participants (
 	id INT PRIMARY KEY AUTO_INCREMENT,
-    avator_id INT,
+    avatar_id INT,
     drop_id INT,
     
-    FOREIGN KEY (avator_id)	REFERENCES avators(id) 	ON DELETE CASCADE,
+    FOREIGN KEY (avatar_id)	REFERENCES avatars(id) 	ON DELETE CASCADE,
     FOREIGN KEY (drop_id) REFERENCES drops(id) 	ON DELETE CASCADE
 );

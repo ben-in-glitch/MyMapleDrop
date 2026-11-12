@@ -59,40 +59,40 @@ class UserRepository:
         return model.Users(id=result[0], dc_id=result[1], username=result[2]) if result else None
 
 
-class AvatorRepository:
+class AvatarRepository:
     def __init__(self, db_pool):
         self.db_pool = db_pool
 
 
-    def create_avator(self,avator:model.Avators):
+    def create_avatar(self,avatar:model.Avatars):
         with db_connection(self.db_pool) as conn:
             cursor = conn.cursor()
-            sql = "INSERT INTO avators (user_id, avator, job, cur_channel) VALUES (%s, %s, %s, %s)"
-            cursor.execute(sql, (avator.user_id, avator.avator, avator.job, avator.cur_channel))
+            sql = "INSERT INTO avatars (user_id, avatar, job, cur_channel) VALUES (%s, %s, %s, %s)"
+            cursor.execute(sql, (avatar.user_id, avatar.avatar, avatar.job, avatar.cur_channel))
             new_id = cursor.lastrowid
             cursor.close()
 
         return new_id
 
-    def update_avator(self,avator:model.Avators):
+    def update_avatar(self,avatar:model.Avatars):
         with db_connection(self.db_pool) as conn:
             cursor = conn.cursor()
-            sql = "UPDATE avators SET avator = %s, job = %s, cur_channel = %s WHERE user_id = %s"
-            cursor.execute(sql, (avator.avator, avator.job, avator.cur_channel, avator.user_id))
+            sql = "UPDATE avatars SET avatar = %s, job = %s, cur_channel = %s WHERE user_id = %s"
+            cursor.execute(sql, (avatar.avatar, avatar.job, avatar.cur_channel, avatar.user_id))
             conn.commit()
             cursor.close()
 
         return cursor.rowcount > 0
 
-    def get_avator_by_name(self, avator):
+    def get_avatar_by_name(self, avatar):
         with db_connection(self.db_pool) as conn:
             cursor = conn.cursor()
-            sql = "SELECT * FROM avators WHERE avator = %s"
-            cursor.execute(sql, (avator,))
+            sql = "SELECT id, user_id, avatar, job, cur_channel FROM avatars WHERE avatar = %s"
+            cursor.execute(sql, (avatar,))
             result = cursor.fetchone()
             cursor.close()
 
-        return model.Avators(id=result[0], user_id=result[1], avator=result[2], job=result[3], cur_channel=result[4]) if result else None
+        return model.Avatars(id=result[0], user_id=result[1], avatar=result[2], job=result[3], cur_channel=result[4]) if result else None
 
     def get_user_by_dc_id(self, user_dc_id):
         with db_connection(self.db_pool) as conn:
@@ -103,6 +103,16 @@ class AvatorRepository:
             cursor.close()
 
         return model.Users(id=result[0], dc_id=result[1], username=result[2]) if result else None
+
+    def get_all_avatars(self):
+        with db_connection(self.db_pool) as conn:
+            cursor = conn.cursor()
+            sql = "SELECT id, user_id, avatar, job, cur_channel FROM avatars"
+            cursor.execute(sql)
+            results = cursor.fetchall()
+            cursor.close()
+
+        return [model.Avatars(id=result[0], user_id=result[1], avatar=result[2], job=result[3], cur_channel=result[4]) for result in results]
 
 class ItemRepository:
     def __init__(self, db_pool):
@@ -220,6 +230,26 @@ class DropRepository:
     def __init__(self, db_pool):
         self.db_pool = db_pool
 
+    def create_with_participants(self, drop: model.Drops, avatar_ids):
+        # One connection and one commit: both records succeed or both roll back.
+        with db_connection(self.db_pool) as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    "INSERT INTO drops (boss_id, item_id, is_container, open_item_id, quantity, created_at) "
+                    "VALUES (%s, %s, %s, %s, %s, %s)",
+                    (drop.boss_id, drop.item_id, drop.is_container,
+                     drop.open_item_id, drop.quantity, drop.created_at),
+                )
+                drop_id = cursor.lastrowid
+                cursor.executemany(
+                    "INSERT INTO drop_participants (avatar_id, drop_id) VALUES (%s, %s)",
+                    [(avatar_id, drop_id) for avatar_id in avatar_ids],
+                )
+            finally:
+                cursor.close()
+        return drop_id
+
     def create_drop(self,drop:model.Drops):
         with db_connection(self.db_pool) as conn:
             cursor = conn.cursor()
@@ -260,8 +290,8 @@ class Drop_participantRepository:
     def create_drop_participant(self, drop_participant:model.Drop_participants):
         with db_connection(self.db_pool) as conn:
             cursor = conn.cursor()
-            sql = "INSERT INTO drop_participants (avator_id, drop_id) VALUES (%s, %s)"
-            cursor.execute(sql, (drop_participant.avator_id, drop_participant.drop_id))
+            sql = "INSERT INTO drop_participants (avatar_id, drop_id) VALUES (%s, %s)"
+            cursor.execute(sql, (drop_participant.avatar_id, drop_participant.drop_id))
             new_id = cursor.lastrowid
             conn.commit()
             cursor.close()
@@ -271,8 +301,8 @@ class Drop_participantRepository:
     def update_drop_participant(self, drop_participant:model.Drop_participants):
         with db_connection(self.db_pool) as conn:
             cursor = conn.cursor()
-            sql = "UPDATE drop_participants SET avator_id = %s, drop_id = %s WHERE id = %s"
-            cursor.execute(sql, (drop_participant.avator_id, drop_participant.drop_id, drop_participant.id))
+            sql = "UPDATE drop_participants SET avatar_id = %s, drop_id = %s WHERE id = %s"
+            cursor.execute(sql, (drop_participant.avatar_id, drop_participant.drop_id, drop_participant.id))
             res = cursor.rowcount > 0
             conn.commit()
             cursor.close()
